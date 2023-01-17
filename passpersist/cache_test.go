@@ -6,9 +6,8 @@ func TestCacheSet(t *testing.T) {
 	c := NewCache()
 	varBinds := []*VarBind{
 		{
-			Oid:       []int{1, 3, 6, 1, 4, 1, 30065, 4, 224, 255, 0},
-			ValueType: "STRING",
-			Value:     typedValue{Value: &StringVal{Value: "TEST"}},
+			Oid:   []int{1, 3, 6, 1, 4, 1, 30065, 4, 224, 255, 0},
+			Value: typedValue{Value: &StringVal{Value: "TEST"}},
 		},
 	}
 

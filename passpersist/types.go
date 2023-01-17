@@ -87,18 +87,17 @@ func (o OID) String() string {
 }
 
 type VarBind struct {
-	Oid       OID        `json:"oid"`
-	ValueType string     `json:"type"`
-	Value     typedValue `json:"value"`
+	Oid   OID        `json:"oid"`
+	Value typedValue `json:"value"`
 }
 
 func (r *VarBind) String() string {
-	return fmt.Sprintf("%s, %s, %v", r.Oid, r.ValueType, r.Value)
+	return fmt.Sprintf("%s, %s, %v", r.Oid, r.Value.TypeString(), r.Value)
 }
 
 func (r *VarBind) Marshal() string {
 
-	return fmt.Sprintf("%s\n%s\n%s", r.Oid, r.ValueType, r.Value.String())
+	return fmt.Sprintf("%s\n%s\n%s", r.Oid, r.Value.TypeString(), r.Value.String())
 }
 
 type typedValue struct {
@@ -111,18 +110,19 @@ func (v *typedValue) String() string {
 	case *StringVal:
 		return v.GetStringVal()
 	case *IntVal:
-		fmt.Println("INTVAL")
-		return strconv.Itoa(v.GetIntVal())
+		return strconv.FormatInt(int64(v.GetIntVal()), 10)
 	case *Counter32Val:
-		return strconv.Itoa(int(v.GetCouter32Val()))
+		return strconv.FormatUint(uint64(v.GetCouter32Val()), 10)
 	case *Counter64Val:
-		return strconv.Itoa(int(v.GetCouter64Val()))
+		return strconv.FormatUint(v.GetCouter64Val(), 10)
 	case *GaugeVal:
-		return strconv.Itoa(v.GetGaugeVal())
+		return strconv.FormatUint(uint64(v.GetGaugeVal()), 10)
 	case *OctetStringVal:
 		return string(v.GetOctetStringVal())
-	case *IPVal:
-		return v.GetIPVal().String()
+	case *IPAddrVal:
+		return v.GetIPAddrVal().String()
+	case *IPV6AddrVal:
+		return v.GetIPV6AddrVal().String()
 	case *OIDVal:
 		return v.GetOIDVal().String()
 	case *TimeTicksVal:
@@ -147,8 +147,10 @@ func (v *typedValue) TypeString() string {
 		return "GAUGE"
 	case *OctetStringVal:
 		return "OCTET"
-	case *IPVal:
+	case *IPAddrVal:
 		return "IPADDRESS"
+	case *IPV6AddrVal:
+		return "STRING"
 	case *OIDVal:
 		return "OBJECTID"
 	case *TimeTicksVal:
@@ -165,39 +167,46 @@ func (v *typedValue) GetValue() interface{} {
 	}
 	return nil
 }
-func (v *typedValue) GetCouter32Val() int32 {
+func (v *typedValue) GetCouter32Val() uint32 {
 	if x, ok := v.GetValue().(*Counter32Val); ok {
 		return x.Value
 	}
 	return 0
 }
 
-func (v *typedValue) GetCouter64Val() int64 {
+func (v *typedValue) GetCouter64Val() uint64 {
 	if x, ok := v.GetValue().(*Counter64Val); ok {
 		return x.Value
 	}
 	return 0
 }
 
-func (v *typedValue) GetGaugeVal() int {
+func (v *typedValue) GetGaugeVal() uint32 {
 	if x, ok := v.GetValue().(*GaugeVal); ok {
 		return x.Value
 	}
 	return 0
 }
 
-func (v *typedValue) GetIntVal() int {
+func (v *typedValue) GetIntVal() int32 {
 	if x, ok := v.GetValue().(*IntVal); ok {
 		return x.Value
 	}
 	return 0
 }
 
-func (v *typedValue) GetIPVal() net.IP {
-	if x, ok := v.GetValue().(*IPVal); ok {
+func (v *typedValue) GetIPAddrVal() net.IP {
+	if x, ok := v.GetValue().(*IPAddrVal); ok {
 		return x.Value
 	}
-	return net.IP("0.0.0.0")
+	return net.ParseIP("0.0.0.0")
+}
+
+func (v *typedValue) GetIPV6AddrVal() net.IP {
+	if x, ok := v.GetValue().(*IPV6AddrVal); ok {
+		return x.Value
+	}
+	return net.ParseIP("::")
 }
 
 func (v *typedValue) GetOctetStringVal() []byte {
@@ -233,20 +242,26 @@ type isTypedValue interface {
 }
 
 type Counter32Val struct {
-	Value int32
+	Value uint32
 }
 
 type Counter64Val struct {
-	Value int64
+	Value uint64
 }
 
-type GaugeVal IntVal
+type GaugeVal struct {
+	Value uint32
+}
 
 type IntVal struct {
-	Value int
+	Value int32
 }
 
-type IPVal struct {
+type IPAddrVal struct {
+	Value net.IP
+}
+
+type IPV6AddrVal struct {
 	Value net.IP
 }
 
@@ -270,7 +285,8 @@ func (*Counter32Val) isTypedValue()   {}
 func (*Counter64Val) isTypedValue()   {}
 func (*GaugeVal) isTypedValue()       {}
 func (*IntVal) isTypedValue()         {}
-func (*IPVal) isTypedValue()          {}
+func (*IPAddrVal) isTypedValue()      {}
+func (*IPV6AddrVal) isTypedValue()    {}
 func (*OctetStringVal) isTypedValue() {}
 func (*OIDVal) isTypedValue()         {}
 func (*StringVal) isTypedValue()      {}

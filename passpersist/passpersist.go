@@ -70,9 +70,8 @@ func (p *PassPersist) AddEntry(oid OID, value typedValue) error {
 	log.Debug().Msgf("adding %s: %s, %s", value.TypeString(), oid, value)
 
 	err := p.cache.Set(&VarBind{
-		Oid:       oid,
-		ValueType: value.TypeString(),
-		Value:     value,
+		Oid:   oid,
+		Value: value,
 	})
 
 	if err != nil {
@@ -86,36 +85,42 @@ func (p *PassPersist) AddString(oid OID, value string) error {
 	return p.AddEntry(oid, typedValue{Value: &StringVal{Value: value}})
 }
 
-func (p *PassPersist) AddInt(oid OID, value int) error {
+func (p *PassPersist) AddInt(oid OID, value int32) error {
 	return p.AddEntry(oid, typedValue{Value: &IntVal{Value: value}})
 }
 
 func (p *PassPersist) AddOID(oid OID, value OID) error {
-	return nil
+	return p.AddEntry(oid, typedValue{Value: &OIDVal{Value: value}})
 }
 
 func (p *PassPersist) AddOctetString(oid OID, value []byte) error {
-	return nil
+	return p.AddEntry(oid, typedValue{Value: &OctetStringVal{Value: value}})
 }
 
-func (p *PassPersist) AddIP(oid OID, ip net.IP) error {
-	return nil
+func (p *PassPersist) AddIPAddr(oid OID, value string) error {
+	ip := net.ParseIP(value)
+	return p.AddEntry(oid, typedValue{Value: &IPAddrVal{Value: ip}})
 }
 
-func (p *PassPersist) AddCounter32(oid OID, value int32) error {
-	return nil
+func (p *PassPersist) AddIPV6Addr(oid OID, value string) error {
+	ip := net.ParseIP(value)
+	return p.AddEntry(oid, typedValue{Value: &IPV6AddrVal{Value: ip}})
 }
 
-func (p *PassPersist) AddCounter64(oid OID, value int64) error {
-	return nil
+func (p *PassPersist) AddCounter32(oid OID, value uint32) error {
+	return p.AddEntry(oid, typedValue{Value: &Counter32Val{Value: value}})
 }
 
-func (p *PassPersist) AddGauge(oid OID, value int) error {
-	return nil
+func (p *PassPersist) AddCounter64(oid OID, value uint64) error {
+	return p.AddEntry(oid, typedValue{Value: &Counter64Val{Value: value}})
+}
+
+func (p *PassPersist) AddGauge(oid OID, value uint32) error {
+	return p.AddEntry(oid, typedValue{Value: &GaugeVal{Value: value}})
 }
 
 func (p *PassPersist) AddTimeTicks(oid OID, value time.Duration) error {
-	return nil
+	return p.AddEntry(oid, typedValue{Value: &TimeTicksVal{Value: value}})
 }
 
 func (p *PassPersist) Dump() {
