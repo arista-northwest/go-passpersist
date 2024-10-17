@@ -107,6 +107,10 @@ func EncodeString(s string) []int {
 	return oid
 }
 
+// func DecodeOID(oid passpersist.OID) string {
+// 	asn1.Unmarshal()
+// }
+
 func CapPanic() {
 	if r := recover(); r != nil {
 		slog.Error("panicing", "error", string(debug.Stack()))

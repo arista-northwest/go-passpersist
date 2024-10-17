@@ -124,7 +124,7 @@ func (v OID) MustAppend(subs []int) OID {
 	return o
 }
 
-func NewOID(s string) (oid OID, err error) {
+func NewOID(s string) (OID, error) {
 	subids := strings.Split(s, ".")
 
 	// if there is a leadong dot, the first element will be empty
@@ -142,23 +142,24 @@ func NewOID(s string) (oid OID, err error) {
 		return OID{}, &InvalidOIDErr{s, "The sub-identifiers in an OID is up to 128"}
 	}
 
-	o := make(asn1.ObjectIdentifier, len(subids))
+	oid := make(asn1.ObjectIdentifier, len(subids))
 	for i, v := range subids {
-		o[i], err = strconv.Atoi(v)
-		if err != nil || o[i] < 0 || int64(o[i]) > math.MaxUint32 {
+		val, err := strconv.Atoi(v)
+		if err != nil || val < 0 || int64(val) > math.MaxUint32 {
 			return OID{}, &InvalidOIDErr{s, fmt.Sprintf("The sub-identifiers is range %d..%d", 0, int64(math.MaxUint32))}
 		}
+		oid[i] = val
 	}
 
-	if len(o) > 0 && o[0] > 2 {
+	if len(oid) > 0 && oid[0] > 2 {
 		return OID{}, &InvalidOIDErr{s, "The first sub-identifier is range 0..2"}
 	}
 
-	if o[0] < 2 && o[1] >= 40 {
+	if oid[0] < 2 && oid[1] >= 40 {
 		return OID{}, &InvalidOIDErr{s, "The second sub-identifier is range 0..39"}
 	}
 
-	return OID{o}, nil
+	return OID{oid}, nil
 }
 
 // MustNewOID is like NewOID but panics if argument cannot be parsed

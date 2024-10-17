@@ -24,3 +24,18 @@ func TestOIDAppend(t *testing.T) {
 
 	fmt.Println(o.String())
 }
+
+func TestInsertSorted(t *testing.T) {
+	oids := OIDs{
+		MustNewOID("1.2.3.4.7"),
+		MustNewOID("1.2.3.4.1"),
+		MustNewOID("1.2.3.4.10"),
+		MustNewOID("1.2.3.4.5"),
+		MustNewOID("1.2.3.4.3"),
+	}
+
+	oids = append(oids, MustNewOID("1.2.3.4.6"))
+
+	fmt.Println(oids.Sort())
+	//oids := make(OIDs, 0, len(idx))
+}

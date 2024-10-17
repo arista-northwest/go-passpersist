@@ -42,18 +42,15 @@ func (c *Cache) Commit() error {
 	defer c.Unlock()
 
 	slog.Debug("commiting cache...")
-
 	c.committed = c.staged
-
 	c.staged = make(map[string]*VarBind)
 
+	// rebuild index
 	idx := make(OIDs, 0, len(c.committed))
 	for _, vb := range c.committed {
 		idx = append(idx, vb.OID)
 	}
-
-	idx = idx.Sort()
-	c.index = idx
+	c.index = idx.Sort()
 
 	return nil
 }
