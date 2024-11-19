@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 	"time"
 
 	"github.com/arista-northwest/go-passpersist/passpersist"
-	"github.com/arista-northwest/go-passpersist/utils"
 )
 
 var (
@@ -15,45 +14,26 @@ var (
 	version string
 )
 
-func init() {
-	//logger.EnableSyslogger(syslog.LOG_LOCAL4, slog.LevelInfo)
+func runner(pp *passpersist.PassPersist) {
+	var epoch time.Duration = time.Duration(time.Now().UnixNano())
+	pp.AddString([]int{0}, "Hello from PassPersist")
+	pp.AddString([]int{1}, "You found a secret message!")
+	pp.AddTimeTicks([]int{2}, epoch)
+
+	for i := 1; i <= 2; i++ {
+		for j := 1; j <= 2; j++ {
+			pp.AddString([]int{i, j}, fmt.Sprintf("Value: %d.%d", i, j))
+		}
+	}
 }
 
-// func redirectStderr(f *os.File) {
-// 	err := syscall.Dup2(int(f.Fd()), int(os.Stderr.Fd()))
-// 	if err != nil {
-// 		log.Fatalf("Failed to redirect stderr to file: %v", err)
-// 	}
-// }
-
 func main() {
-	defer utils.CapPanic()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	utils.CommonCLI(version, tag, date)
+	pp := passpersist.NewPassPersist(
+		passpersist.WithRefresh(time.Second * 1),
+	)
 
-	var opts []passpersist.Option
-
-	b, _ := utils.GetBaseOIDFromSNMPdConfig()
-	if b != nil {
-		opts = append(opts, passpersist.WithBaseOID(*b))
-	}
-	opts = append(opts, passpersist.WithRefresh(time.Second*300))
-
-	pp := passpersist.NewPassPersist(opts...)
-
-	pp.Run(ctx, func(pp *passpersist.PassPersist) {
-		slog.Debug("updating...")
-		pp.AddString([]int{0}, "Hello from PassPersist")
-		pp.AddString([]int{1}, "You found a secret message!")
-
-		// for i := 2; i <= 2; i++ {
-		// 	for j := 1; j <= 2; j++ {
-		// 		pp.AddString([]int{i, j}, fmt.Sprintf("Value: %d.%d", i, j))
-		// 		slog.Debug("added string", slog.Any("subs", []int{i, j}))
-		// 	}
-		// }
-	})
+	pp.Run(ctx, runner)
 }
