@@ -252,27 +252,7 @@ func (p *PassPersist) overrideFromEnv() {
 	}
 }
 
-func setPrio(prio int) error {
-	var err error
-
-	switch runtime.GOOS {
-	case "linux", "bsd", "freebsd", "netbsd", "openbsd":
-		err = unix.Setpriority(unix.PRIO_PROCESS, 0, prio)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (p *PassPersist) update(ctx context.Context, callback func(*PassPersist)) {
-
-	err := setPrio(15)
-	if err != nil {
-		slog.Warn("failed to set priority")
-	}
 
 	for {
 		select {
