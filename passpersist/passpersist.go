@@ -30,11 +30,11 @@ const (
 const (
 	AristaExperimentalMib = "1.3.6.1.4.1.30065.4"
 	NetSnmpExtendMib      = "1.3.6.1.4.1.8072.1.3.1"
-	NetPassExamples       = "1.3.6.1.4.1.8072.2.255"
+	NetSnmpPassExamples   = "1.3.6.1.4.1.8072.2.255"
 )
 
 var (
-	DefaultBaseOID     OID           = MustNewOID(AristaExperimentalMib).MustAppend([]int{226})
+	DefaultBaseOID     OID           = MustNewOID(NetSnmpExtendMib).MustAppend([]int{226})
 	DefaultRefreshRate time.Duration = time.Second * 60
 )
 
