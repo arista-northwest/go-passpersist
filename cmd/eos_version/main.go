@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log/slog"
 	"log/syslog"
 	"net"
-	"net/netip"
 	"os"
 	"strconv"
 	"strings"
@@ -68,27 +69,48 @@ func (t *EOSTimestamp) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+type Component struct {
+	Name    string
+	Version string
+}
+
+type Package struct {
+	Version string
+	Release string
+}
+
+type Details struct {
+	SystemEpoch string
+	SwitchType  string
+	Deviations  []string
+	Components  []Component
+	Packages    map[string]Package
+}
+
 type ShowVersion struct {
-	ImageFormatVersion   string       `json:"imageFormatVersion,omitempty"`
-	CEOSToolsVersion     string       `json:"cEosToolsVersion,omitempty"`
-	Uptime               EOSTimeTicks `json:"uptime,omitempty"`
-	ModelName            string       `json:"modelName,omitempty"`
-	KernelVersion        string       `json:"kernelVersion,omitempty"`
-	InternalVersion      string       `json:"internalVersion,omitempty"`
-	MemoryTotal          int          `json:"memTotal,omitempty"`
 	Manufacturer         string       `json:"mfgName,omitempty"`
-	SerialNumber         string       `json:"serialNumber,omitempty"`
-	SystemMACAddress     MACAddress   `json:"systemMacAddress,omitempty"`
-	BootupTimeStamp      EOSTimestamp `json:"bootupTimestamp,omitempty"`
-	MemoryFree           int          `json:"memFree,omitempty"`
-	Version              string       `json:"version,omitempty"`
-	ConfiguredMACAddress MACAddress   `json:"configMacAddress,omitempty"`
-	IsInternalVersion    bool         `json:"isIntlVersion,omitempty"`
-	ImageOptimization    string       `json:"imageOptimization,omitempty"`
-	InternalBuildID      string       `json:"internalBuildId,omitempty"`
-	HardwareRevision     string       `json:"hardwareRevision,omitempty"`
+	ModelName            string       `json:",omitempty"`
+	HardwareRevision     string       `json:",omitempty"`
+	SerialNumber         string       `json:",omitempty"`
+	SystemMACAddress     MACAddress   `json:",omitempty"`
 	HardwareMACAddress   MACAddress   `json:"hwMacAddress,omitempty"`
+	ConfiguredMACAddress MACAddress   `json:"configMacAddress,omitempty"`
+	Version              string       `json:",omitempty"`
 	Architecture         string       `json:"architecture,omitempty"`
+	InternalVersion      string       `json:",omitempty"`
+	InternalBuildID      string       `json:",omitempty"`
+	ImageFormatVersion   string       `json:",omitempty"`
+	ImageOptimization    string       `json:",omitempty"`
+	BootupTimeStamp      EOSTimestamp `json:",omitempty"`
+	Uptime               EOSTimeTicks `json:",omitempty"`
+	MemoryTotal          uint32       `json:"memTotal,omitempty"`
+	MemoryFree           uint32       `json:"memFree,omitempty"`
+	IsInternalVersion    bool         `json:"isIntlVersion,omitempty"`
+
+	Details Details
+
+	// CEOSToolsVersion string `json:"cEosToolsVersion,omitempty"`
+	// KernelVersion    string `json:"kernelVersion,omitempty"`
 }
 
 func init() {
@@ -99,6 +121,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	mock := flag.Bool("mock", false, "use mock data")
 	utils.CommonCLI(version, tag, date)
 
 	var opts []passpersist.Option
@@ -111,20 +134,50 @@ func main() {
 
 	pp.Run(ctx, func(pp *passpersist.PassPersist) {
 		var data ShowVersion
-		err := arista.EosCommandJson("show version", data)
-		if err != nil {
-			slog.Error("failed to run command", slog.Any("error", err))
-			os.Exit(1)
+
+		if *mock {
+			utils.MustLoadMockDataFile(&data, "mock.json")
+		} else {
+			err := arista.EosCommandJson("show version", data)
+			if err != nil {
+				slog.Error("failed to run command", slog.Any("error", err))
+				os.Exit(1)
+			}
 		}
-		pp.AddString([]int{255, 1}, data.Version)
-		pp.AddInt([]int{255, 2}, int32(data.MemoryFree))
-		pp.AddCounter32([]int{255, 3}, uint32(4294967295))
-		pp.AddCounter64([]int{255, 4}, uint64(18446744073709551615))
-		pp.AddOID([]int{255, 5}, passpersist.MustNewOID("1.3.6.1.4.1.30065.4.224"))
-		pp.AddOctetString([]int{255, 6}, []byte{'0', 'b', 'c', 'd'})
-		pp.AddIP([]int{255, 7}, netip.MustParseAddr("1.2.3.4"))
-		pp.AddIPV6([]int{255, 8}, netip.MustParseAddr("dead:beef:1:2:3::4"))
-		pp.AddGauge([]int{255, 9}, uint32(4294967295))
-		pp.AddTimeTicks([]int{255, 10}, data.Uptime.Duration)
+
+		pp.AddString([]int{255, 1}, data.Manufacturer)
+		pp.AddString([]int{255, 2}, data.ModelName)
+		pp.AddString([]int{255, 3}, data.HardwareRevision)
+		pp.AddString([]int{255, 4}, data.SerialNumber)
+		pp.AddString([]int{255, 5}, data.SystemMACAddress.String())
+		pp.AddString([]int{255, 6}, data.HardwareMACAddress.String())
+		pp.AddString([]int{255, 7}, data.ConfiguredMACAddress.String())
+		pp.AddString([]int{255, 8}, data.Version)
+		pp.AddString([]int{255, 9}, data.Architecture)
+		pp.AddString([]int{255, 10}, data.Architecture)
+		pp.AddString([]int{255, 11}, data.InternalVersion)
+		pp.AddString([]int{255, 12}, data.InternalBuildID)
+		pp.AddString([]int{255, 13}, data.ImageFormatVersion)
+		pp.AddString([]int{255, 14}, data.ImageOptimization)
+		pp.AddCounter64([]int{255, 15}, uint64(data.BootupTimeStamp.Unix()))
+		pp.AddTimeTicks([]int{255, 16}, data.Uptime.Duration)
+		pp.AddGauge([]int{255, 17}, data.MemoryTotal)
+		pp.AddGauge([]int{255, 18}, data.MemoryTotal)
+		pp.AddString([]int{255, 19}, fmt.Sprintf("%t", data.IsInternalVersion))
+
+    pp.AddString([]int{255, 20}, data.Details.SwitchType)
+
+    for i, c := range data.Details.Components {
+        pp.AddString([]int{255, 21, 1, 1, i}, c.Name)
+        pp.AddString([]int{255, 21, 1, 2, i}, c.Version)
+    }
+
+    i := 0;
+    for n, p := range data.Details.Packages {
+      pp.AddString([]int{255, 22, 1, 1, i}, n)
+      pp.AddString([]int{255, 22, 1, 2, i}, p.Version)
+      pp.AddString([]int{255, 22, 1, 2, i}, p.Release)
+      i += 1
+    }
 	})
 }
