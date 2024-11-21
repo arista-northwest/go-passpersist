@@ -6,15 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/netip"
-	"runtime"
-	"time"
-
-	"os"
-
 	"log/slog"
-
-	"golang.org/x/sys/unix"
+	"net/netip"
+	"os"
+	"time"
 )
 
 type SetError int
@@ -28,7 +23,6 @@ const (
 )
 
 const (
-	AristaExperimentalMib = "1.3.6.1.4.1.30065.4"
 	NetSnmpExtendMib      = "1.3.6.1.4.1.8072.1.3.1"
 	NetSnmpPassExamples   = "1.3.6.1.4.1.8072.2.255"
 )
