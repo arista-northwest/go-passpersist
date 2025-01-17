@@ -39,3 +39,12 @@ func TestInsertSorted(t *testing.T) {
 	fmt.Println(oids.Sort())
 	//oids := make(OIDs, 0, len(idx))
 }
+
+func TestOIDContains(t *testing.T) {
+	base := MustNewOID("1.3.6.1.4.1.8072")
+	oid := MustNewOID("1.3.6.1.4.1.8072.1")
+
+	if !oid.Contains(base) {
+		t.Errorf("expected oid '%s' to contain base '%s'", oid, base)
+	}
+}

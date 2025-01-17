@@ -173,7 +173,7 @@ func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {
 			case "getnext":
 				inp := <-input
 				slog.Debug("validating", "input", inp)
-				oid, err := p.convertAndValidateOID(inp)
+				oid, err := convertAndValidateOID(inp, p.baseOID)
 				if err != nil {
 					slog.Warn("failed to validate input", "input", slog.Any("error", err))
 					fmt.Println("NONE")
@@ -189,7 +189,7 @@ func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {
 
 			case "get":
 				inp := <-input
-				oid, err := p.convertAndValidateOID(inp)
+				oid, err := convertAndValidateOID(inp, p.baseOID)
 				if err != nil {
 					slog.Warn("failed to validate input", "input", slog.Any("error", err))
 					fmt.Println("NONE")
@@ -304,15 +304,15 @@ func watchStdin(ctx context.Context, input chan<- string, done chan<- bool) {
 	}
 }
 
-func (p *PassPersist) convertAndValidateOID(oid string) (OID, error) {
+func convertAndValidateOID(oid string, baseOID OID) (OID, error) {
 	o, err := NewOID(oid)
 
 	if err != nil {
 		return OID{}, errors.New(fmt.Sprintf("failed to load oid: %s", oid))
 	}
 
-	if !o.Contains(p.baseOID) {
-		return o, errors.New(fmt.Sprint("oid '%s' does not contain base OID '%s'", o.String(), p.baseOID.String()))
+	if !o.Contains(baseOID) {
+		return o, errors.New(fmt.Sprintf("oid '%s' does not contain base OID '%s'", o.String(), baseOID.String()))
 	}
 
 	return o, nil
