@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -23,8 +24,8 @@ const (
 )
 
 const (
-	NetSnmpExtendMib      = "1.3.6.1.4.1.8072.1.3.1"
-	NetSnmpPassExamples   = "1.3.6.1.4.1.8072.2.255"
+	NetSnmpExtendMib    = "1.3.6.1.4.1.8072.1.3.1"
+	NetSnmpPassExamples = "1.3.6.1.4.1.8072.2.255"
 )
 
 var (
@@ -172,7 +173,11 @@ func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {
 			case "getnext":
 				inp := <-input
 				slog.Debug("validating", "input", inp)
-				if oid, ok := p.convertAndValidateOID(inp); ok {
+				oid, err := p.convertAndValidateOID(inp)
+				if err != nil {
+					slog.Warn("failed to validate input", "input", slog.Any("error", err))
+					fmt.Println("NONE")
+				} else {
 					slog.Debug("getNext", "oid", oid.String())
 					v := p.getNext(oid)
 					if v != nil {
@@ -180,14 +185,15 @@ func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {
 					} else {
 						fmt.Println("NONE")
 					}
-				} else {
-					slog.Warn("failed to validate input", "input", inp)
-					fmt.Println("NONE")
 				}
 
 			case "get":
 				inp := <-input
-				if oid, ok := p.convertAndValidateOID(inp); ok {
+				oid, err := p.convertAndValidateOID(inp)
+				if err != nil {
+					slog.Warn("failed to validate input", "input", slog.Any("error", err))
+					fmt.Println("NONE")
+        } else {
 					slog.Debug("get", "oid", oid.String())
 					v := p.get(oid)
 					if v != nil {
@@ -195,9 +201,7 @@ func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {
 					} else {
 						fmt.Println("NONE")
 					}
-				} else {
-					fmt.Println("NONE")
-				}
+        }
 			case "set":
 				fmt.Println(NotWriteable.String())
 			case "DUMP", "C":
@@ -300,17 +304,16 @@ func watchStdin(ctx context.Context, input chan<- string, done chan<- bool) {
 	}
 }
 
-func (p *PassPersist) convertAndValidateOID(oid string) (OID, bool) {
+func (p *PassPersist) convertAndValidateOID(oid string) (OID, error) {
 	o, err := NewOID(oid)
 
 	if err != nil {
-		slog.Warn("failed to load oid", "oid", oid)
-		return OID{}, false
+		return OID{}, errors.New(fmt.Sprintf("failed to load oid: %s", oid))
 	}
 
 	if !o.Contains(p.baseOID) {
-		return o, false
+		return o, errors.New(fmt.Sprint("oid '%s' does not contain base OID '%s'", o.String(), p.baseOID.String()))
 	}
 
-	return o, true
+	return o, nil
 }
