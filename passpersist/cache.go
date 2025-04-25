@@ -33,7 +33,7 @@ func (c *Cache) getIndex(o OID) (int, bool) {
 			return p - 1, true
 		}
 	}
-	return 0, false //errors.New("OID or prefix does not exist")
+	return 0, false
 }
 
 func (c *Cache) Commit() error {
