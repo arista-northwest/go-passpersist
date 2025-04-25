@@ -2,7 +2,6 @@ package passpersist
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -22,19 +21,19 @@ type Cache struct {
 	index     OIDs
 }
 
-func (c *Cache) getIndex(o OID) (int, error) {
+func (c *Cache) getIndex(o OID) (int, bool) {
 	for p, v := range c.index {
 		if v.Equal(o) {
-			return p, nil
+			return p, true
 		}
 	}
 
 	for p, v := range c.index {
 		if v.StartsWith(o) {
-			return p - 1, nil
+			return p - 1, true
 		}
 	}
-	return 0, errors.New("OID or prefix does not exist")
+	return 0, false //errors.New("OID or prefix does not exist")
 }
 
 func (c *Cache) Commit() error {
@@ -91,10 +90,10 @@ func (c *Cache) GetNext(oid OID) *VarBind {
 
 	slog.Debug("getting next value after", "oid", oid.String())
 
-	idx, err := c.getIndex(oid)
+	idx, found := c.getIndex(oid)
 	slog.Debug("got index at", "oid", oid.String(), "index", idx)
-	if err != nil {
-		slog.Warn("failed to get index", slog.Any("error", err.Error()), "oid", oid.String())
+	if !found {
+		slog.Debug("index not found", "oid", oid.String())
 		return nil
 	}
 
