@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -193,7 +192,7 @@ func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {
 				if err != nil {
 					slog.Warn("failed to validate input", "input", slog.Any("error", err))
 					fmt.Println("NONE")
-        } else {
+				} else {
 					slog.Debug("get", "oid", oid.String())
 					v := p.get(oid)
 					if v != nil {
@@ -201,7 +200,7 @@ func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {
 					} else {
 						fmt.Println("NONE")
 					}
-        }
+				}
 			case "set":
 				fmt.Println(NotWriteable.String())
 			case "DUMP", "C":
@@ -308,11 +307,11 @@ func convertAndValidateOID(oid string, baseOID OID) (OID, error) {
 	o, err := NewOID(oid)
 
 	if err != nil {
-		return OID{}, errors.New(fmt.Sprintf("failed to load oid: %s", oid))
+		return OID{}, fmt.Errorf("failed to load oid: %s", oid)
 	}
 
 	if !o.Contains(baseOID) {
-		return o, errors.New(fmt.Sprintf("oid '%s' does not contain base OID '%s'", o.String(), baseOID.String()))
+		return o, fmt.Errorf("oid '%s' does not contain base OID '%s'", o.String(), baseOID.String())
 	}
 
 	return o, nil
