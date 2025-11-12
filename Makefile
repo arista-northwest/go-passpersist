@@ -1,9 +1,8 @@
 
 DIST=$(realpath ./dist)
-GOOS=linux
-GOARCH=amd64
-CGO_ENABLED=0
-export GOOS GOARCH CGO_ENABLED
+export GOOS=linux
+export GOARCH=amd64
+export CGO_ENABLED=0
 
 MODULE := $(shell go mod edit -print | grep ^module | awk '{print $$2}')
 RELEASE_VER? := dev
@@ -14,8 +13,8 @@ BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 .PHONY: all cmd
 
-all: test
-	@echo ALL
+#all: test
+#	@echo ALL
 
 cmd:
 	@echo building $(path)...

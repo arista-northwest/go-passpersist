@@ -36,7 +36,7 @@ func (c *Cache) getIndex(o OID) (int, bool) {
 	return 0, false
 }
 
-func (c *Cache) Commit() error {
+func (c *Cache) Commit() {
 	c.Lock()
 	defer c.Unlock()
 
@@ -51,7 +51,7 @@ func (c *Cache) Commit() error {
 	}
 	c.index = idx.Sort()
 
-	return nil
+	//return nil
 }
 
 func (c *Cache) DumpIndex() {
@@ -116,13 +116,11 @@ func (c *Cache) GetNext(oid OID) *VarBind {
 	return nil
 }
 
-func (c *Cache) Set(v *VarBind) error {
+func (c *Cache) Set(v *VarBind) {
 	c.Lock()
 	defer c.Unlock()
 
 	slog.Debug("staging", slog.Any("value", v.Marshal()))
 
 	c.staged[v.OID.String()] = v
-
-	return nil
 }

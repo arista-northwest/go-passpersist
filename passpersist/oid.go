@@ -28,9 +28,8 @@ type OID struct {
 	Value asn1.ObjectIdentifier
 }
 
-func (o *OID) EnvDecode(value string) error {
-	*o = MustNewOID(value)
-	return nil
+func (v OID) EnvDecode(value string) OID {
+	return MustNewOID(value)
 }
 
 func (v OID) String() string {
@@ -58,7 +57,7 @@ func (v OID) MarshalJSON() ([]byte, error) {
 // 	return
 // }
 
-// Returns true if this OID contains the specified OID
+// Contains returns true if this OID contains the specified OID
 func (v OID) Contains(o OID) bool {
 	if len(v.Value) < len(o.Value) {
 		return false
@@ -71,7 +70,7 @@ func (v OID) Contains(o OID) bool {
 	return true
 }
 
-// Returns 0 this OID is equal to the specified OID,
+// Compare returns 0 this OID is equal to the specified OID,
 // -1 this OID is lexicographically less than the specified OID,
 // 1 this OID is lexicographically greater than the specified OID
 func (v OID) Compare(o OID) int {
@@ -93,7 +92,7 @@ func (v OID) Compare(o OID) int {
 	return -1
 }
 
-// Returns true if this OID is same the specified OID
+// Equal returns true if this OID is same the specified OID
 func (v OID) Equal(o OID) bool {
 	return v.Value.Equal(o.Value)
 }
@@ -105,7 +104,7 @@ func (v OID) StartsWith(o OID) bool {
 	return false
 }
 
-// Returns OID with additional sub-ids
+// Append returns OID with additional sub-ids
 func (v OID) Append(subs []int) (OID, error) {
 	buf := bytes.NewBufferString(v.String())
 	for _, i := range subs {
@@ -195,14 +194,14 @@ func (o OIDs) uniq(comp func(a, b OID) bool) OIDs {
 	return c
 }
 
-// Filter out adjacent OID list
+// Uniq filters out adjacent OID list
 func (o OIDs) Uniq() OIDs {
 	return o.uniq(func(a, b OID) bool {
 		return b.Equal(a)
 	})
 }
 
-// Filter out adjacent OID list with the same prefix
+// UniqBase filter out adjacent OID list with the same prefix
 func (o OIDs) UniqBase() OIDs {
 	return o.uniq(func(a, b OID) bool {
 		return b.Contains(a)
@@ -225,6 +224,7 @@ func (o sortableOIDs) Less(i, j int) bool {
 	return o.OIDs[i].Compare(o.OIDs[j]) < 1
 }
 
+// NewOIDs takes a list of string and returns a list of OIDs
 func NewOIDs(s []string) (oids OIDs, err error) {
 	for _, l := range s {
 		o, e := NewOID(l)

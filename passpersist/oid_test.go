@@ -48,3 +48,18 @@ func TestOIDContains(t *testing.T) {
 		t.Errorf("expected oid '%s' to contain base '%s'", oid, base)
 	}
 }
+
+func TestNewOIDs(t *testing.T) {
+	oids, err := NewOIDs([]string{
+		"1.2.3.4.5",
+		"5.4.3.2.1",
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(oids) != 2 {
+		t.Errorf("expected 2 oids, got %d", len(oids))
+	}
+}

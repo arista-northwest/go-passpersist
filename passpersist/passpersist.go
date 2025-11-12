@@ -23,13 +23,13 @@ const (
 )
 
 const (
-	NetSnmpExtendMib    = "1.3.6.1.4.1.8072.1.3.1"
-	NetSnmpPassExamples = "1.3.6.1.4.1.8072.2.255"
+	NetSnmpExtendMib = "1.3.6.1.4.1.8072.1.3.1"
+	//NetSnmpPassExamples = "1.3.6.1.4.1.8072.2.255"
 )
 
 var (
-	DefaultBaseOID     OID           = MustNewOID(NetSnmpExtendMib).MustAppend([]int{226})
-	DefaultRefreshRate time.Duration = time.Second * 60
+	DefaultBaseOID     = MustNewOID(NetSnmpExtendMib).MustAppend([]int{226})
+	DefaultRefreshRate = time.Second * 60
 )
 
 func init() {
@@ -103,15 +103,11 @@ func (p *PassPersist) AddEntry(subs []int, value typedValue) error {
 
 	slog.Debug("adding entry", slog.Any("value", value))
 
-	err = p.cache.Set(&VarBind{
+	p.cache.Set(&VarBind{
 		OID:       oid,
 		ValueType: value.TypeString(),
 		Value:     value,
 	})
-
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -120,40 +116,96 @@ func (p *PassPersist) AddString(subIds []int, value string) error {
 	return p.AddEntry(subIds, typedValue{&StringVal{value}})
 }
 
+func (p *PassPersist) MustAddString(subIds []int, value string) {
+	err := p.AddString(subIds, value)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (p *PassPersist) AddInt(subIds []int, value int32) error {
 	return p.AddEntry(subIds, typedValue{&IntVal{value}})
 }
-
+func (p *PassPersist) MustAddInt(subIds []int, value int32) {
+	err := p.AddInt(subIds, value)
+	if err != nil {
+		panic(err)
+	}
+}
 func (p *PassPersist) AddOID(subIds []int, value OID) error {
 	return p.AddEntry(subIds, typedValue{&OIDVal{value}})
 }
-
+func (p *PassPersist) MustAddOID(subIds []int, value OID) {
+	err := p.AddOID(subIds, value)
+	if err != nil {
+		panic(err)
+	}
+}
 func (p *PassPersist) AddOctetString(subIds []int, value []byte) error {
 	return p.AddEntry(subIds, typedValue{&OctetStringVal{value}})
+}
+func (p *PassPersist) MustAddOctetString(subIds []int, value []byte) {
+	err := p.AddOctetString(subIds, value)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (p *PassPersist) AddIP(subIds []int, value netip.Addr) error {
 	return p.AddEntry(subIds, typedValue{&IPAddrVal{value}})
 }
-
+func (p *PassPersist) MustAddIP(subIds []int, value netip.Addr) {
+	err := p.AddIP(subIds, value)
+	if err != nil {
+		panic(err)
+	}
+}
 func (p *PassPersist) AddIPV6(subIds []int, value netip.Addr) error {
 	return p.AddEntry(subIds, typedValue{&IPV6AddrVal{value}})
 }
-
+func (p *PassPersist) MustAddIPV6(subIds []int, value netip.Addr) {
+	err := p.AddIPV6(subIds, value)
+	if err != nil {
+		panic(err)
+	}
+}
 func (p *PassPersist) AddCounter32(subIds []int, value uint32) error {
 	return p.AddEntry(subIds, typedValue{&Counter32Val{value}})
+}
+func (p *PassPersist) MustAddCounter32(subIds []int, value uint32) {
+	err := p.AddCounter32(subIds, value)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (p *PassPersist) AddCounter64(subIds []int, value uint64) error {
 	return p.AddEntry(subIds, typedValue{&Counter64Val{value}})
 }
+func (p *PassPersist) MustAddCounter64(subIds []int, value uint64) {
+	err := p.AddCounter64(subIds, value)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func (p *PassPersist) AddGauge(subIds []int, value uint32) error {
 	return p.AddEntry(subIds, typedValue{&GaugeVal{value}})
 }
-
+func (p *PassPersist) MustAddGauge(subIds []int, value uint32) {
+	err := p.AddGauge(subIds, value)
+	if err != nil {
+		panic(err)
+	}
+}
 func (p *PassPersist) AddTimeTicks(subIds []int, value time.Duration) error {
 	return p.AddEntry(subIds, typedValue{&TimeTicksVal{value}})
+}
+func (p *PassPersist) MustAddTimeTicks(subIds []int, value time.Duration) {
+	err := p.AddTimeTicks(subIds, value)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (p *PassPersist) Run(ctx context.Context, f func(*PassPersist)) {

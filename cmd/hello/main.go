@@ -8,6 +8,7 @@ import (
 	"github.com/arista-northwest/go-passpersist/passpersist"
 )
 
+//goland:noinspection GoUnusedGlobalVariable,GoUnusedGlobalVariable,GoUnusedGlobalVariable
 var (
 	date    string
 	tag     string
@@ -15,14 +16,14 @@ var (
 )
 
 func runner(pp *passpersist.PassPersist) {
-	var epoch time.Duration = time.Duration(time.Now().UnixNano())
-	pp.AddString([]int{0}, "Hello from PassPersist")
-	pp.AddString([]int{1}, "You found a secret message!")
-	pp.AddTimeTicks([]int{2}, epoch)
+	epoch := time.Duration(time.Now().UnixNano())
+	pp.MustAddString([]int{0}, "Hello from PassPersist")
+	pp.MustAddString([]int{1}, "You found a secret message!")
+	pp.MustAddTimeTicks([]int{2}, epoch)
 
 	for i := 1; i <= 2; i++ {
 		for j := 1; j <= 2; j++ {
-			pp.AddString([]int{i, j}, fmt.Sprintf("Value: %d.%d", i, j))
+			pp.MustAddString([]int{i, j}, fmt.Sprintf("Value: %d.%d", i, j))
 		}
 	}
 }
